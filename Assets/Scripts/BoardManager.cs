@@ -23,7 +23,7 @@ public class BoardManager : MonoBehaviour
     float _cellWidth, _cellHeight;
     float _cellDist;
 
-    public enum eMARK { None = -1, Balck, White };
+    public enum eMARK { None = -1, Black, White };
     public struct SCell
     {
         public eMARK _state;
@@ -131,7 +131,7 @@ public class BoardManager : MonoBehaviour
                 if (eMark == _cells[x, y]._state) { ++matchingNum; }
 
             if (matchingNum == _omokCount)
-                return (eMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
+                return (eMark == eMARK.Black) ? eWINNER.Win : eWINNER.Lose;
         }
 
         //세로 체크
@@ -147,7 +147,7 @@ public class BoardManager : MonoBehaviour
                 if (eMark == _cells[x, y]._state) { ++matchingNum; }
 
             if (matchingNum == _omokCount)
-                return (eMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
+                return (eMark == eMARK.Black) ? eWINNER.Win : eWINNER.Lose;
         }
 
         //사선 좌상 -> 우하 체크
@@ -159,7 +159,7 @@ public class BoardManager : MonoBehaviour
                 if (eMark == _cells[xy, xy]._state) { ++matchingNum; }
 
             if (matchingNum == _omokCount)
-                return (eMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
+                return (eMark == eMARK.Black) ? eWINNER.Win : eWINNER.Lose;
         }
 
         //사선 좌하 -> 우상 체크
@@ -173,7 +173,7 @@ public class BoardManager : MonoBehaviour
                 if (eMark == _cells[x, y--]._state) { ++matchingNum; }
 
             if (matchingNum == _omokCount)
-                return (eMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
+                return (eMark == eMARK.Black) ? eWINNER.Win : eWINNER.Lose;
         }
 
         //무승부

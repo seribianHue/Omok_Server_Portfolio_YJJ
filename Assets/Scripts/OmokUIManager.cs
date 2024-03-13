@@ -22,7 +22,7 @@ public class OmokUIManager : MonoBehaviour
     {
         _port = Int32.Parse(port);
     }
-
+    [Space]
     [SerializeField] GameObject _textWaiting;
     [SerializeField] GameObject _textConnecting;
 
@@ -35,7 +35,7 @@ public class OmokUIManager : MonoBehaviour
     {
         _textConnecting.SetActive(true);
     }
-
+    [Space]
     [SerializeField] GameObject _lobbyGO;
 
     public void SetLobby(bool onoff)
@@ -43,6 +43,7 @@ public class OmokUIManager : MonoBehaviour
         _lobbyGO.SetActive(onoff);
     }
 
+    [Space]
     [SerializeField] GameObject _winText;
     [SerializeField] GameObject _loseText;
 

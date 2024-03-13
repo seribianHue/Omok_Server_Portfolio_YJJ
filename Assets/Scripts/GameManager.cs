@@ -33,7 +33,7 @@ public class GameManager : MonoBehaviour
         if (_isServerOn)
         {
             _uiManager.SetWaiting();
-            _myMark = BoardManager.eMARK.Balck;
+            _myMark = BoardManager.eMARK.Black;
             _opponentMark = BoardManager.eMARK.White;
         }
     }
@@ -46,7 +46,7 @@ public class GameManager : MonoBehaviour
         {
             _uiManager.SetConnecting();
             _myMark = BoardManager.eMARK.White;
-            _opponentMark = BoardManager.eMARK.Balck;
+            _opponentMark = BoardManager.eMARK.Black;
 
         }
     }
@@ -148,7 +148,7 @@ public class GameManager : MonoBehaviour
                 else _eResult = eRESULT.LOSE;
 
             }
-            _curTurnMark = (_curTurnMark == BoardManager.eMARK.Balck) ? BoardManager.eMARK.White : BoardManager.eMARK.Balck;
+            _curTurnMark = (_curTurnMark == BoardManager.eMARK.Black) ? BoardManager.eMARK.White : BoardManager.eMARK.Black;
         }
     }
     public bool _isGameOver = false;
