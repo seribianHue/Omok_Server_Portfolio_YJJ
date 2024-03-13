@@ -1,11 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using UnityEngine;
 using System;
+using System.Net.NetworkInformation;
 
 public class TCPBase : MonoBehaviour
 {
@@ -150,7 +149,7 @@ public class TCPBase : MonoBehaviour
 
     void AcceptClient()
     {
-        if (_socketL != null && _socketL.Poll(0, SelectMode.SelectRead))
+        if (_socketL != null && _socketL.Poll(1, SelectMode.SelectRead))
         {
             _socket = _socketL.Accept();
             _IsConnected = true;
@@ -165,6 +164,7 @@ public class TCPBase : MonoBehaviour
             _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
             _socket = null;
+            Debug.Log("Socket Disconnected..!");
         }
     }
 
@@ -192,6 +192,11 @@ public class TCPBase : MonoBehaviour
             _socketL = null;
         }
         Debug.Log("Server stopped..");
+    }
+
+    private void OnApplicationQuit()
+    {
+        Close();
     }
 
     #region Client
@@ -224,4 +229,69 @@ public class TCPBase : MonoBehaviour
     }
 
     #endregion
+
+    public bool IsTcpPortAvailable(int tcpPort)
+    {
+        //  IPGlobalProperties.GetIPGlobalProperties()
+        //  -   로컬 컴퓨터의 네트워크 연결 및
+        //      트래픽 통계를 관리하는 객체 정보 전달..
+        IPGlobalProperties ipgp = IPGlobalProperties.GetIPGlobalProperties();
+
+        //  활성화된 포트 체크..
+        //  IPGlobalProperties.GetActiveTcpConnections()
+        //  -   로컬 컴퓨터의 IPv4 및 IPv6 TCP
+        //              ( Internet Protocol version 4 )
+        //      연결에 대한 정보를 반환..
+        //
+        //  -   Listening 상태를 제외한
+        //      모든 TCP Connection들을 반환..
+        //
+        //  -   사용중,  대기 중, 닫히는 중, 닫힌 상태의
+        //      모든 TCP 연결 정보를 반환..
+        TcpConnectionInformation[] conns = ipgp.GetActiveTcpConnections();
+        foreach (var cn in conns)
+        {
+            if (cn.LocalEndPoint.Port == tcpPort)
+                return false;
+        }
+
+        //  리스닝 포트 체크..
+        //  IPGlobalProperties.GetActiveTcpListeners()
+        //  -   로컬 컴퓨터의 IPv4 및
+        //      IPv6 TCP 수신기에 대한
+        //      끝점 정보를 반환..
+        //  -   Listening 상태에 있는
+        //      TCP Listener들을 반환..
+        //      -   Port를 오픈하고
+        //          클라이언트를 Listening 하고 있는
+        //          TCP 서버들의
+        //          네트워크 연결 정보를 반환..
+        IPEndPoint[] endpoints = ipgp.GetActiveTcpListeners();
+        foreach (var ep in endpoints)
+        {
+            if (ep.Port == tcpPort)
+                return false;
+        }
+
+        return true;
+
+    }
+
+    //  유효한 tcp 포트 번호 세팅..
+    //  -   기본 범위는 1024 ~ 49151
+    public bool GetValidTCPPort( out int validPort, int minPort = 1024, int maxPort = 49151 )
+    {
+        for (int port = minPort; port <= maxPort; ++port)
+        {
+            if (IsTcpPortAvailable(port))
+            {
+                validPort = port;
+                _port = port;
+                return true;
+            }
+
+        }
+        validPort = -1;
+        return false;
+    }
 }

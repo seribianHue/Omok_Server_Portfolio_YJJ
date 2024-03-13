@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -16,12 +14,27 @@ public class GameManager : MonoBehaviour
     [Header("Board Manager"), SerializeField]
     BoardManager _boardManager;
 
-    private void Start()
+    [Header("최소 port"), SerializeField]
+    int _minPort = 1024;
+    [Header("최대 port"), SerializeField]
+    int _maxPort = 49151;
+    int _port = -1;
+
+    private void Awake()
     {
         GameObject tcp = Instantiate(_myTCP);
         _tcp = tcp.GetComponent<TCPBase>();
 
-        _uiManager._IFport.text = _tcp._Port.ToString();
+
+        if (_tcp.GetValidTCPPort(out _port, _minPort, _maxPort))
+        {
+            _uiManager._IFport.text = _port.ToString();
+            _uiManager._port = _port;
+        }
+        else
+            Debug.LogError("Invalid Port : " + _port);
+
+        //_uiManager._IFport.text = _tcp._Port.ToString();
         _uiManager._IFip.text = _tcp._IPAddress;
     }
 
