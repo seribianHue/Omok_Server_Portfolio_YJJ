@@ -149,7 +149,7 @@ public class TCPBase : MonoBehaviour
 
     void AcceptClient()
     {
-        if (_socketL != null && _socketL.Poll(1, SelectMode.SelectRead))
+        if (_socketL != null && _socketL.Poll(0, SelectMode.SelectRead))
         {
             _socket = _socketL.Accept();
             _IsConnected = true;

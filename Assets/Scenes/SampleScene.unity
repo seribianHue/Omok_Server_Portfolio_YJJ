@@ -1316,8 +1316,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.5757321, y: 0.0012260166, z: -0.0008638966, w: 0.8176371}
+  m_LocalPosition: {x: 0.04652553, y: 2.7171035, z: -1.1087803}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1352,7 +1352,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65c37e268bbee3d4eb372603c723ddb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _uiManager: {fileID: 0}
+  _uiManager: {fileID: 1218083959}
   _prefab_Stone:
   - {fileID: 4191148211630164254, guid: f003b664dd493d847b704a511f786e17, type: 3}
   - {fileID: 8432654104270525757, guid: 5a4feba831b5bbb4796af6f329d4faec, type: 3}
@@ -2645,7 +2645,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 414, y: -92.99991}
+  m_AnchoredPosition: {x: 414, y: -93}
   m_SizeDelta: {x: 700, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1797096802
