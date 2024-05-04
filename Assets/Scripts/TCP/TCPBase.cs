@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using UnityEngine;
 using System;
+using System.Net.NetworkInformation;
 
 public class TCPBase : MonoBehaviour
 {
@@ -224,4 +225,42 @@ public class TCPBase : MonoBehaviour
     }
 
     #endregion
+
+    //  tcpPort가 유효한 tcp 포트번호인지 체크..
+    public bool IsTcpPortAvailable(int tcpPort)
+    {
+        IPGlobalProperties ipgp = IPGlobalProperties.GetIPGlobalProperties();
+
+        TcpConnectionInformation[] conns = ipgp.GetActiveTcpConnections();
+        foreach (var cn in conns)
+        {
+            if (cn.LocalEndPoint.Port == tcpPort)
+                return false;
+        }
+
+        IPEndPoint[] endpoints = ipgp.GetActiveTcpListeners();
+        foreach (var ep in endpoints)
+        {
+            if (ep.Port == tcpPort)
+                return false;
+        }
+
+        return true;
+
+    }
+
+    public bool GetValidTCPPort(out int validPort, int minPort = 1024, int maxPort = 49151)
+    {
+        for (int port = minPort; port <= maxPort; ++port)
+        {
+            if (IsTcpPortAvailable(port))
+            {
+                validPort = port;
+                _port = port;
+                return true;
+            }
+        }
+        validPort = -1;
+        return false;
+    }
 }

@@ -8,6 +8,15 @@ public static class NetCommon
     public static string GetHostIP()
     {
         IPHostEntry ipEntry = Dns.GetHostEntry(Dns.GetHostName());
-        return ipEntry.AddressList[1].ToString();
+
+        foreach (IPAddress ip in ipEntry.AddressList)
+        {
+            if(ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            {
+                return ip.ToString();
+            }
+        }
+        return string.Empty;
+        //return ipEntry.AddressList[2].ToString();
     }
 }

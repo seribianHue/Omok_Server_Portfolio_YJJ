@@ -10,6 +10,12 @@ public class GameManager : MonoBehaviour
     GameObject _myTCP;
     TCPBase _tcp;
 
+    [Header("최소 port"), SerializeField]
+    int _minPort = 1024;
+    [Header("최대 port"), SerializeField]
+    int _maxPort = 49151;
+    int _port = -1;
+
     [Header("UI"), SerializeField]
     OmokUIManager _uiManager;
     
@@ -21,8 +27,12 @@ public class GameManager : MonoBehaviour
         GameObject tcp = Instantiate(_myTCP);
         _tcp = tcp.GetComponent<TCPBase>();
 
-        _uiManager._IFport.text = _tcp._Port.ToString();
         _uiManager._IFip.text = _tcp._IPAddress;
+        if(_tcp.GetValidTCPPort(out _port, _minPort, _maxPort))
+        {
+            _uiManager._IFport.text = _tcp._Port.ToString();
+            _uiManager._port = _tcp._Port;
+        }
     }
 
     bool _isServerOn;

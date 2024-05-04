@@ -33,26 +33,30 @@ public class BoardManager : MonoBehaviour
 
     [Header("Points Transform"), SerializeField]
     Transform[] _pts;
-    Vector3[] _ptPos;
+    Vector3[] _ptScreenPos;
 
     private void Awake()
     {
         _mainCam = Camera.main;
 
         int index = 0;
-        _ptPos = new Vector3[(int)ePT.Count];
+        _ptScreenPos = new Vector3[(int)ePT.Count];
         foreach (Transform tmp in _pts)
-            _ptPos[index] = _mainCam.WorldToScreenPoint(_pts[index++].position);
+            _ptScreenPos[index] = _mainCam.WorldToScreenPoint(_pts[index++].position);
 
-        Debug.Log(_ptPos[0].x + ", " + _ptPos[0].y);
-        Vector3 dd = _mainCam.ScreenToWorldPoint(_ptPos[0]);
+        Debug.Log(_ptScreenPos[0].x + ", " + _ptScreenPos[0].y);
+        Vector3 dd = _mainCam.ScreenToWorldPoint(_ptScreenPos[0]);
 
         Debug.Log(dd);
 
 
-        _cellWidth = (_ptPos[1].x - _ptPos[0].x) / _cellCount;
-        _cellHeight = (_ptPos[0].y - _ptPos[2].y) / _cellCount;
+        _cellWidth = (_ptScreenPos[1].x - _ptScreenPos[0].x) / _cellCount;
+        _cellHeight = (_ptScreenPos[0].y - _ptScreenPos[2].y) / _cellCount;
         _cellDist = _cellWidth < _cellHeight ? _cellWidth : _cellHeight;
+
+        Debug.Log(_cellWidth);
+        Debug.Log(_cellHeight);
+        Debug.Log(_cellDist);
 
         _cells = new SCell[_cellCount, _cellCount];
         for (int i = 0; i < _cellCount; i++)
@@ -60,12 +64,17 @@ public class BoardManager : MonoBehaviour
             for (int j = 0; j < _cellCount; j++)
             {
                 _cells[j, i]._pos = new Vector2(
-                    _ptPos[(int)ePT.LT].x + _cellWidth * j + _cellWidth * 0.5f,
-                    _ptPos[(int)ePT.LT].y - _cellHeight * i - _cellHeight * 0.5f);
+                    _ptScreenPos[(int)ePT.LT].x + _cellWidth * j,
+                    _ptScreenPos[(int)ePT.LT].y - _cellHeight * i);
 
                 _cells[j, i]._state = eMARK.None;
             }
         }
+        Debug.Log(_ptScreenPos[(int)ePT.LT].x + ", " + _ptScreenPos[(int)ePT.LT].y);
+        Debug.Log("_cells[0, 0]._pos : " + _cells[0, 0]._pos);
+        Debug.Log("_mainCam.ScreenToWorldPoint(_cells[0, 0]._pos : " + _mainCam.ScreenToWorldPoint(_cells[0, 0]._pos));
+        Debug.Log("_cells[18, 18]._pos : " + _cells[18, 18]._pos);
+        Debug.Log("_mainCam.ScreenToWorldPoint(_cells[18, 18]._pos : " + _mainCam.ScreenToWorldPoint(_cells[18, 18]._pos));
     }
 
     public bool SetMark(Vector3 mousPos, eMARK eMark, out int indexX, out int indexY)
@@ -105,9 +114,12 @@ public class BoardManager : MonoBehaviour
 
         GameObject tmp = Instantiate(_prefab_Stone[(int)eMark]);
         Vector3 pos = _cells[x, y]._pos;
-        pos.z = _mainCam.transform.position.z;
+        Debug.Log(pos);
+        //pos.z = pos.y;
+        pos.z = _mainCam.transform.position.y;
         pos = _mainCam.ScreenToWorldPoint(pos);
-        pos.z = 0f;
+        Debug.Log(pos);
+        pos.y = 0.5f;
         tmp.transform.position = pos;
     }
 
