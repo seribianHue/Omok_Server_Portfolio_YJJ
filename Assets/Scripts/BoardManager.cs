@@ -44,19 +44,9 @@ public class BoardManager : MonoBehaviour
         foreach (Transform tmp in _pts)
             _ptScreenPos[index] = _mainCam.WorldToScreenPoint(_pts[index++].position);
 
-        Debug.Log(_ptScreenPos[0].x + ", " + _ptScreenPos[0].y);
-        Vector3 dd = _mainCam.ScreenToWorldPoint(_ptScreenPos[0]);
-
-        Debug.Log(dd);
-
-
-        _cellWidth = (_ptScreenPos[1].x - _ptScreenPos[0].x) / _cellCount;
-        _cellHeight = (_ptScreenPos[0].y - _ptScreenPos[2].y) / _cellCount;
+        _cellWidth = (_ptScreenPos[1].x - _ptScreenPos[0].x) / (_cellCount - 1);
+        _cellHeight = (_ptScreenPos[0].y - _ptScreenPos[2].y) / (_cellCount - 1);
         _cellDist = _cellWidth < _cellHeight ? _cellWidth : _cellHeight;
-
-        Debug.Log(_cellWidth);
-        Debug.Log(_cellHeight);
-        Debug.Log(_cellDist);
 
         _cells = new SCell[_cellCount, _cellCount];
         for (int i = 0; i < _cellCount; i++)
@@ -70,16 +60,18 @@ public class BoardManager : MonoBehaviour
                 _cells[j, i]._state = eMARK.None;
             }
         }
-        Debug.Log(_ptScreenPos[(int)ePT.LT].x + ", " + _ptScreenPos[(int)ePT.LT].y);
+/*        Debug.Log(_ptScreenPos[(int)ePT.LT].x + ", " + _ptScreenPos[(int)ePT.LT].y);
         Debug.Log("_cells[0, 0]._pos : " + _cells[0, 0]._pos);
         Debug.Log("_mainCam.ScreenToWorldPoint(_cells[0, 0]._pos : " + _mainCam.ScreenToWorldPoint(_cells[0, 0]._pos));
         Debug.Log("_cells[18, 18]._pos : " + _cells[18, 18]._pos);
-        Debug.Log("_mainCam.ScreenToWorldPoint(_cells[18, 18]._pos : " + _mainCam.ScreenToWorldPoint(_cells[18, 18]._pos));
+        Debug.Log("_mainCam.ScreenToWorldPoint(_cells[18, 18]._pos : " + _mainCam.ScreenToWorldPoint(_cells[18, 18]._pos));*/
     }
 
     public bool SetMark(Vector3 mousPos, eMARK eMark, out int indexX, out int indexY)
     {
         bool isFind = false;
+        bool isRuleOk = false;
+        int how; 
         indexX = -1;
         indexY = -1;
         for (int i = 0; i < _cellCount; i++)
@@ -91,7 +83,9 @@ public class BoardManager : MonoBehaviour
                 {
                     isFind = true;
 
-                    if (isFind)
+                    isRuleOk = CheckOmokRule(j, i, eMark, out how);
+
+                    if (isRuleOk)
                     {
                         SetMark(j, i, eMark);
                         indexX = j;
@@ -99,13 +93,24 @@ public class BoardManager : MonoBehaviour
                         Debug.Log(j + " : " + i);
                         break;
                     }
+                    else
+                    {
+                        if (how == 3)
+                            _uiManager.Show_RuleAgainst33();
+                        else
+                            _uiManager.Show_RuleAgainst34();
+                        break;
+                    }
 
                 }
             }
-            if (isFind)
+            if (isFind && isRuleOk)
                 break;
         }
-        return (isFind);
+        if(isFind == false)
+            GameManager.Instance.CamShake(0.2f, 0.5f);
+
+        return (isFind && isRuleOk);
     }
 
     public void SetMark(int x, int y, eMARK eMark)
@@ -114,13 +119,45 @@ public class BoardManager : MonoBehaviour
 
         GameObject tmp = Instantiate(_prefab_Stone[(int)eMark]);
         Vector3 pos = _cells[x, y]._pos;
-        Debug.Log(pos);
+
+        RaycastHit hit;
+        var ray = Camera.main.ScreenPointToRay(pos);
+
+        if(Physics.Raycast(ray, out hit, 100f))
+        {
+            print(hit.transform.name);
+            Debug.Log(hit.point);
+            tmp.transform.position = hit.point;
+
+        }
+
+
+/*        Debug.Log(pos);
         //pos.z = pos.y;
-        pos.z = _mainCam.transform.position.y;
+        pos.z = 0.5f;
         pos = _mainCam.ScreenToWorldPoint(pos);
         Debug.Log(pos);
         pos.y = 0.5f;
-        tmp.transform.position = pos;
+        //tmp.transform.position = pos;*/
+
+    }
+
+    public void setRandomMark(eMARK eMark)
+    {
+        bool isOK = false;
+        int ranX = -1;
+        int ranY = -1;
+
+        while (isOK == false)
+        {
+            ranX = Random.Range(0, _cellCount);
+            ranY = Random.Range(0, _cellCount);
+            if (_cells[ranX, ranY]._state == eMARK.None)
+                isOK = true;
+        }
+
+        SetMark(ranX, ranY, eMark);
+
     }
 
     float Dist(Vector3 mPos, Vector2 gridPos)
@@ -369,5 +406,401 @@ public class BoardManager : MonoBehaviour
         if (matchingNum >= 5) { return eWINNER.Win; }
 
         return eWINNER.None;
+    }
+
+    public eWINNER CheckOmokWinner(int indexX, int indexY)
+    {
+        eMARK curMark = _cells[indexX, indexY]._state;
+        eMARK nextMark = eMARK.None;
+        int matchingNum = 1;
+        bool isOmok = false;
+
+        if (CheckStoneUpDown(indexX, indexY, curMark) >= 4)
+            return (curMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
+        if (CheckStoneLeftRight(indexX, indexY, curMark) >= 4)
+            return (curMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
+        if (CheckStoneLeftUp(indexX, indexY, curMark) >= 4)
+            return (curMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
+        if (CheckStoneRightUp(indexX, indexY, curMark) >= 4)
+            return (curMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
+
+        //무승부
+        int emptyCount = 0;
+        for (int x = 0; x < _cellCount; x++)
+        {
+            for (int y = 0; y < _cellCount; y++)
+                if (_cells[x, y]._state == eMARK.None) { ++emptyCount; }
+        }
+
+        if (emptyCount == 0)
+            return eWINNER.Tie;
+
+        //아직 게임 진행중
+        return eWINNER.None;
+    }
+
+    public bool CheckOmokRule(int indexX, int indexY, eMARK eMark, out int howRule)
+    {
+        howRule = 0;
+        int count3 = 0;
+        int count4 = 0;
+
+        int UpDown = CheckStoneUpDown(indexX, indexY, eMark);
+        if (UpDown >= 2)
+        {
+            if (UpDown == 2)
+                ++count3;
+            else if (UpDown == 3)
+                ++count4;
+        }
+
+        int LeftRight = CheckStoneLeftRight(indexX, indexY, eMark);
+        if (LeftRight >= 2)
+        {
+            if (LeftRight == 2)
+                ++count3;
+            else if (LeftRight == 3)
+                ++count4;
+        }
+
+        int LeftUp = CheckStoneLeftUp(indexX, indexY, eMark);
+        if (LeftUp >= 2)
+        {
+            if (LeftUp == 2)
+                ++count3;
+            else if (LeftUp == 3)
+                ++count4;
+        }
+
+        int RightUp = CheckStoneRightUp(indexX, indexY, eMark);
+        if (RightUp >= 2)
+        {
+            if (RightUp == 2)
+                ++count3;
+            else if (RightUp == 3)
+                ++count4;
+        }
+
+        if (count3 >= 1)
+        {
+            if (count3 == 2)
+            {
+                howRule = 3; return false;
+            }
+            else if (count4 == 1)
+            {
+                howRule = 4; return false;
+            }
+        }
+        else if (count4 >= 2)
+        {
+            howRule = 4; return false;
+        }
+        return true;
+
+    }
+
+    public int CheckStoneUpDown(int x, int y, eMARK eMark)
+    {
+        eMARK curMark = eMark;
+        eMARK nextMark = eMARK.None;
+
+        int tmpX = x, tmpY = y;
+        int stoneCount = 0;
+        //상
+        int jump = 0;
+        do
+        {
+            try
+            {
+                nextMark = _cells[tmpX, --tmpY]._state;
+                if (nextMark == curMark)
+                {
+                    ++stoneCount;
+                    continue;
+                }
+                else if (nextMark == eMARK.None)
+                {
+                    ++jump;
+                }
+                else if (jump >= 2)
+                {
+                    jump = 0;
+
+                    break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch
+            {
+                break;
+            }
+        } while (nextMark == curMark);
+
+        tmpX = x; tmpY = y;
+
+        //하
+        do
+        {
+            try
+            {
+                nextMark = _cells[tmpX, ++tmpY]._state;
+                if (nextMark == curMark)
+                {
+                    ++stoneCount;
+                    continue;
+                }
+                else if (nextMark == eMARK.None)
+                {
+                    ++jump;
+                }
+                else if (jump >= 2)
+                {
+                    jump = 0;
+
+                    break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch
+            {
+                break;
+            }
+        } while (nextMark == curMark);
+
+        return stoneCount;
+    }
+    public int CheckStoneLeftRight(int x, int y, eMARK eMark)
+    {
+        eMARK curMark = eMark;
+        eMARK nextMark = eMARK.None;
+
+        int tmpX = x, tmpY = y;
+        int stoneCount = 0;
+        int jump = 0;
+        //좌
+        do
+        {
+            try
+            {
+                nextMark = _cells[--tmpX, tmpY]._state;
+                if (nextMark == curMark)
+                {
+                    ++stoneCount;
+                    continue;
+                }
+                else if (nextMark == eMARK.None)
+                {
+                    ++jump;
+                }
+                else if (jump >= 2)
+                {
+                    jump = 0;
+
+                    break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch
+            {
+                break;
+            }
+        } while (nextMark == curMark);
+
+        tmpX = x; tmpY = y;
+
+        //우
+        do
+        {
+            try
+            {
+                nextMark = _cells[++tmpX, tmpY]._state;
+                if (nextMark == curMark)
+                {
+                    ++stoneCount;
+                    continue;
+                }
+                else if (nextMark == eMARK.None)
+                {
+                    ++jump;
+                }
+                else if (jump >= 2)
+                {
+                    jump = 0;
+
+                    break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch
+            {
+                break;
+            }
+        } while (nextMark == curMark);
+
+        return stoneCount;
+    }
+    public int CheckStoneLeftUp(int x, int y, eMARK eMark)
+    {
+        eMARK curMark = eMark;
+        eMARK nextMark = eMARK.None;
+
+        int tmpX = x, tmpY = y;
+        int stoneCount = 0;
+        //상
+        int jump = 0;
+        do
+        {
+            try
+            {
+                nextMark = _cells[++tmpX, --tmpY]._state;
+                if (nextMark == curMark)
+                {
+                    ++stoneCount;
+                    continue;
+                }
+                else if (nextMark == eMARK.None)
+                {
+                    ++jump;
+                }
+                else if (jump >= 2)
+                {
+                    jump = 0;
+                    break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch
+            {
+                break;
+            }
+        } while (nextMark == curMark);
+
+        tmpX = x; tmpY = y;
+
+        //하
+        do
+        {
+            try
+            {
+                nextMark = _cells[--tmpX, ++tmpY]._state;
+                if (nextMark == curMark)
+                {
+                    ++stoneCount;
+                    continue;
+                }
+                else if (nextMark == eMARK.None)
+                {
+                    ++jump;
+                }
+                else if (jump >= 2)
+                {
+                    jump = 0;
+
+                    break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch
+            {
+                break;
+            }
+        } while (nextMark == curMark);
+
+        return stoneCount;
+    }
+    public int CheckStoneRightUp(int x, int y, eMARK eMark)
+    {
+        eMARK curMark = eMark;
+        eMARK nextMark = eMARK.None;
+
+        int tmpX = x, tmpY = y;
+        int stoneCount = 0;
+        //상
+        int jump = 0;
+        do
+        {
+            try
+            {
+                nextMark = _cells[--tmpX, --tmpY]._state;
+                if (nextMark == curMark)
+                {
+                    ++stoneCount;
+                    continue;
+                }
+                else if (nextMark == eMARK.None)
+                {
+                    ++jump;
+                }
+                else if (jump >= 2)
+                {
+                    jump = 0;
+
+                    break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch
+            {
+                break;
+            }
+        } while (nextMark == curMark);
+
+        tmpX = x; tmpY = y;
+
+        //하
+        do
+        {
+            try
+            {
+                nextMark = _cells[++tmpX, ++tmpY]._state;
+                if (nextMark == curMark)
+                {
+                    ++stoneCount;
+                    continue;
+                }
+                else if (nextMark == eMARK.None)
+                {
+                    ++jump;
+                }
+                else if (jump >= 2)
+                {
+                    jump = 0;
+
+                    break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch
+            {
+                break;
+            }
+        } while (nextMark == curMark);
+
+        return stoneCount;
     }
 }

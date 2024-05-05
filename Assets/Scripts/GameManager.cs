@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    static GameManager instance;
+    public static GameManager Instance { get { return instance; } }
+
     //hi
     [Header("TCP Base Prefab"), SerializeField]
     GameObject _myTCP;
@@ -21,6 +24,11 @@ public class GameManager : MonoBehaviour
     
     [Header("Board Manager"), SerializeField]
     BoardManager _boardManager;
+
+    private void Awake()
+    {
+        instance = this;
+    }
 
     private void Start()
     {
@@ -63,11 +71,12 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (_tcp._IsConnected)
+        if (_tcp._IsConnected && !_isGameOver)
         {
             _uiManager.SetLobby(false);
             UpdateTurn();
             UpdateWinner();
+            _uiManager.SetSlider(_timeLimit, _curTime);
         }
     }
 
@@ -80,25 +89,43 @@ public class GameManager : MonoBehaviour
 
     public bool isPause = false;
 
+    [SerializeField] float _timeLimit = 15f;
+    float _curTime = 0;
+
     bool DoMyTurn(out int X, out int Y)
     {
         int indexX = 0, indexY = 0;
         if (isPause == false)
         {
-            if (Input.GetMouseButtonDown(0))
+            if(_curTime < _timeLimit)
             {
-                Vector3 pos = Input.mousePosition;
-                Debug.Log(pos);
-                bool ret = _boardManager.SetMark(pos, _myMark, out indexX, out indexY);
-                if (ret == false) { Debug.Log("Check Position"); }
-                else
+                _curTime += Time.deltaTime;
+                if (Input.GetMouseButtonDown(0))
                 {
-                    string indexXY = indexX.ToString() + "," + indexY.ToString();
-                    _tcp.SendMsg(indexXY);
+                    Vector3 pos = Input.mousePosition;
+                    Debug.Log(pos);
+                    bool ret = _boardManager.SetMark(pos, _myMark, out indexX, out indexY);
+                    if (ret == false) { Debug.Log("Check Position"); }
+                    else
+                    {
+                        string indexXY = indexX.ToString() + "," + indexY.ToString();
+                        _tcp.SendMsg(indexXY);
 
-                    X = indexX; Y = indexY;
-                    return true;
+                        _curTime = 0;
+
+                        X = indexX; Y = indexY;
+                        return true;
+                    }
                 }
+            }
+            else
+            {
+                //random mark
+                _boardManager.setRandomMark(_myMark);
+
+                _curTime = 0;
+                X = -1; Y = -1;
+                return true;
             }
         }
         else
@@ -130,8 +157,6 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    
-
     public void UpdateTurn()
     {
         bool ret = false;
@@ -146,7 +171,7 @@ public class GameManager : MonoBehaviour
         if (ret)
         {
 
-            BoardManager.eWINNER eWinner = _boardManager.CheckOmokWinner(X, Y, _curTurnMark);
+            BoardManager.eWINNER eWinner = _boardManager.CheckOmokWinner(X, Y);
             if (eWinner != BoardManager.eWINNER.None)
             {
                 if (eWinner == BoardManager.eWINNER.Win && _curTurnMark == _myMark
@@ -181,6 +206,30 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    [SerializeField]
+    private float _camShakeRoughness;      //°ÅÄ¥±â Á¤µµ
+    [SerializeField]
+    private float _camShakeMagnitude;
 
+    public void CamShake(float ShakeAmount, float ShakeTime)
+    {
+        StartCoroutine(CRT_CamShake(ShakeAmount, ShakeTime));
+    }
+
+    IEnumerator CRT_CamShake(float ShakeAmount, float ShakeTime)
+    {
+        Vector3 initCamPos = Camera.main.transform.position;
+        float timer = 0;
+        while (timer <= ShakeTime)
+        {
+            Camera.main.transform.position = initCamPos + new Vector3(UnityEngine.Random.Range(0f, 1f) * ShakeAmount, 0, UnityEngine.Random.Range(0f, 1f) * ShakeAmount);
+            timer += Time.deltaTime;
+            isPause = true;
+            yield return null;
+        }
+        Camera.main.transform.position = initCamPos;
+        isPause = false;
+        yield return null;
+    }
 
 }
