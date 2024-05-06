@@ -50,7 +50,7 @@ public class OmokUIManager : MonoBehaviour
     {
         _lobbyGO.SetActive(onoff);
     }
-
+    #region winlose
     [Header("WinLose")]
     [SerializeField] GameObject _winText;
     [SerializeField] GameObject _loseText;
@@ -64,6 +64,14 @@ public class OmokUIManager : MonoBehaviour
     {
         _loseText.SetActive(true);
     }
+
+    public void SetWinLoseTextOff()
+    {
+        _winText.SetActive(false);
+        _loseText.SetActive(false);
+
+    }
+    #endregion
 
     [Header("Timer")]
     [SerializeField] Slider _timeSlider;
@@ -119,5 +127,23 @@ public class OmokUIManager : MonoBehaviour
         _ruleAgainst44.SetActive(false);
         yield return null;
     }
+    #endregion
+
+    #region restart
+
+    [Header("Restart")]
+    [SerializeField] Button _RSBTN;
+    [SerializeField] GameObject _RSwaitingText;
+
+    public void SetRSBTNOnOff(bool onoff)
+    {
+        _RSBTN.gameObject.SetActive(onoff);
+    }
+
+    public void SetRSwaitingText(bool onoff)
+    {
+        _RSwaitingText.SetActive(onoff);
+    }
+
     #endregion
 }

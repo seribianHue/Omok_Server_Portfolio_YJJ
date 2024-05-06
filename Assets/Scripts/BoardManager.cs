@@ -113,11 +113,14 @@ public class BoardManager : MonoBehaviour
         return (isFind && isRuleOk);
     }
 
+    public List<GameObject> _setStone = new List<GameObject>();
+
     public void SetMark(int x, int y, eMARK eMark)
     {
         _cells[x, y]._state = eMark;
 
         GameObject tmp = Instantiate(_prefab_Stone[(int)eMark]);
+        _setStone.Add(tmp);
         Vector3 pos = _cells[x, y]._pos;
 
         RaycastHit hit;
@@ -158,6 +161,17 @@ public class BoardManager : MonoBehaviour
 
         SetMark(ranX, ranY, eMark);
 
+    }
+
+    public void ResetMark()
+    {
+        for (int i = 0; i < _cellCount; i++)
+        {
+            for (int j = 0; j < _cellCount; j++)
+            {
+                _cells[j, i]._state = eMARK.None;
+            }
+        }
     }
 
     float Dist(Vector3 mPos, Vector2 gridPos)
@@ -416,13 +430,13 @@ public class BoardManager : MonoBehaviour
         bool isOmok = false;
 
         if (CheckStoneUpDown(indexX, indexY, curMark) >= 4)
-            return (curMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
-        if (CheckStoneLeftRight(indexX, indexY, curMark) >= 4)
-            return (curMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
-        if (CheckStoneLeftUp(indexX, indexY, curMark) >= 4)
-            return (curMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
-        if (CheckStoneRightUp(indexX, indexY, curMark) >= 4)
-            return (curMark == eMARK.Balck) ? eWINNER.Win : eWINNER.Lose;
+            return (curMark == GameManager.Instance._myMark) ? eWINNER.Win : eWINNER.Lose;
+        else if (CheckStoneLeftRight(indexX, indexY, curMark) >= 4)
+            return (curMark == GameManager.Instance._myMark) ? eWINNER.Win : eWINNER.Lose;
+        else if (CheckStoneLeftUp(indexX, indexY, curMark) >= 4)
+            return (curMark == GameManager.Instance._myMark) ? eWINNER.Win : eWINNER.Lose;
+        else if (CheckStoneRightUp(indexX, indexY, curMark) >= 4)
+            return (curMark == GameManager.Instance._myMark) ? eWINNER.Win : eWINNER.Lose;
 
         //¹«½ÂºÎ
         int emptyCount = 0;

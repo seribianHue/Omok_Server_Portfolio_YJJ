@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -78,6 +79,7 @@ public class GameManager : MonoBehaviour
             UpdateWinner();
             _uiManager.SetSlider(_timeLimit, _curTime);
         }
+
     }
 
     public enum eRESULT { NONE = -1, WIN, LOSE, TIE }
@@ -175,12 +177,14 @@ public class GameManager : MonoBehaviour
             if (eWinner != BoardManager.eWINNER.None)
             {
                 if (eWinner == BoardManager.eWINNER.Win && _curTurnMark == _myMark
-                    || eWinner == BoardManager.eWINNER.Lose && _curTurnMark == _opponentMark)
+                    )
                 {
                     _eResult = eRESULT.WIN;
                 }
                 else if (eWinner == BoardManager.eWINNER.Tie) _eResult = eRESULT.TIE;
                 else _eResult = eRESULT.LOSE;
+
+                _isGameOver = true;
 
             }
             _curTurnMark = (_curTurnMark == BoardManager.eMARK.Balck) ? BoardManager.eMARK.White : BoardManager.eMARK.Balck;
@@ -196,15 +200,68 @@ public class GameManager : MonoBehaviour
         }
         else if( _eResult == eRESULT.WIN)
         {
-            _isGameOver = true;
             _uiManager.SetWinText();
+            _uiManager.SetRSBTNOnOff(true);
         }
         else
         {
-            _isGameOver = true;
             _uiManager.SetLoseText();
+            _uiManager.SetRSBTNOnOff(true);
         }
     }
+
+    public void BTN_RestartGame()
+    {
+        _uiManager.SetRSBTNOnOff(false);
+        _uiManager.SetRSwaitingText(true);
+        StartCoroutine(CRT_Restart());
+    }
+
+    IEnumerator CRT_Restart()
+    {
+        while(_isGameOver != false)
+        {
+            SendRestartSign();
+            RecieveRestartSign();
+            yield return null;
+        }
+        Debug.Log("Restart Thread Ended");
+    }
+
+    void SendRestartSign()
+    {
+        string RS = "restart";
+        _tcp.SendMsg(RS);
+    }
+
+    void RecieveRestartSign()
+    {
+        string RS = _tcp.ReciveMsg();
+
+        //string cutRS = RS.Substring(0, 7);
+        Debug.Log(RS);
+        if (!string.IsNullOrEmpty(RS)) { 
+            RestartGame(); }
+    }
+
+    void RestartGame()
+    {
+        _eResult = eRESULT.NONE;
+        _isGameOver = false;
+        _uiManager.SetWinLoseTextOff();
+        _uiManager.SetRSwaitingText(false);
+        //_curTurnMark = BoardManager.eMARK.Balck;
+
+        _boardManager.ResetMark();
+        foreach (GameObject stone in _boardManager._setStone)
+        {
+            Destroy(stone);
+        }
+
+        _boardManager._setStone.Clear();
+    }
+
+    #region CamShake
 
     [SerializeField]
     private float _camShakeRoughness;      //°ÅÄ¥±â Á¤µµ
@@ -231,5 +288,6 @@ public class GameManager : MonoBehaviour
         isPause = false;
         yield return null;
     }
+    #endregion
 
 }
