@@ -261,6 +261,12 @@ public class GameManager : MonoBehaviour
         _boardManager._setStone.Clear();
     }
 
+    public void EndGame()
+    {
+        _tcp.Close();
+        //ui reset
+    }
+
     #region CamShake
 
     [SerializeField]
