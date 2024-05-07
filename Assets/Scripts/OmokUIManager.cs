@@ -33,14 +33,14 @@ public class OmokUIManager : MonoBehaviour
     [SerializeField] GameObject _textWaiting;
     [SerializeField] GameObject _textConnecting;
 
-    public void SetWaiting()
+    public void SetWaiting(bool onoff)
     {
-        _textWaiting.SetActive(true);
+        _textWaiting.SetActive(onoff);
     }
 
-    public void SetConnecting()
+    public void SetConnecting(bool onoff)
     {
-        _textConnecting.SetActive(true);
+        _textConnecting.SetActive(onoff);
     }
 
     [Header("Lobby")]
@@ -133,11 +133,17 @@ public class OmokUIManager : MonoBehaviour
 
     [Header("Restart")]
     [SerializeField] Button _RSBTN;
+    [SerializeField] Button _NoRSBTN;
     [SerializeField] GameObject _RSwaitingText;
 
     public void SetRSBTNOnOff(bool onoff)
     {
         _RSBTN.gameObject.SetActive(onoff);
+    }
+    
+    public void SetNoRSBTNOnOff(bool onoff)
+    {
+        _NoRSBTN.gameObject.SetActive(onoff);
     }
 
     public void SetRSwaitingText(bool onoff)

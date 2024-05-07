@@ -51,7 +51,8 @@ public class GameManager : MonoBehaviour
         _isServerOn = _tcp.StartServer(_uiManager._port, 1);
         if (_isServerOn)
         {
-            _uiManager.SetWaiting();
+            _uiManager.SetWaiting(true);
+            _isGameOver = false;
             _myMark = BoardManager.eMARK.Balck;
             _opponentMark = BoardManager.eMARK.White;
         }
@@ -63,7 +64,9 @@ public class GameManager : MonoBehaviour
         _isConnected = _tcp.Connect(_uiManager._ip, _uiManager._port);
         if (_isConnected)
         {
-            _uiManager.SetConnecting();
+            _uiManager.SetConnecting(true);
+            _isGameOver = false;
+
             _myMark = BoardManager.eMARK.White;
             _opponentMark = BoardManager.eMARK.Balck;
 
@@ -202,11 +205,13 @@ public class GameManager : MonoBehaviour
         {
             _uiManager.SetWinText();
             _uiManager.SetRSBTNOnOff(true);
+            _uiManager.SetNoRSBTNOnOff(true);
         }
         else
         {
             _uiManager.SetLoseText();
             _uiManager.SetRSBTNOnOff(true);
+            _uiManager.SetNoRSBTNOnOff(true);
         }
     }
 
@@ -219,13 +224,19 @@ public class GameManager : MonoBehaviour
 
     IEnumerator CRT_Restart()
     {
-        while(_isGameOver != false)
+        while(_isGameOver == true && _tcp._IsConnected == true)
         {
             SendRestartSign();
             RecieveRestartSign();
             yield return null;
         }
         Debug.Log("Restart Thread Ended");
+        if(_tcp._IsConnected == false)
+        {
+            EndGame();
+            yield return null;
+        }
+        yield return null;
     }
 
     void SendRestartSign()
@@ -248,7 +259,8 @@ public class GameManager : MonoBehaviour
     {
         _eResult = eRESULT.NONE;
         _isGameOver = false;
-        _uiManager.SetWinLoseTextOff();
+        _uiManager.SetWinLoseTextOff(); 
+        _uiManager.SetNoRSBTNOnOff(false);
         _uiManager.SetRSwaitingText(false);
         //_curTurnMark = BoardManager.eMARK.Balck;
 
@@ -259,12 +271,25 @@ public class GameManager : MonoBehaviour
         }
 
         _boardManager._setStone.Clear();
+        _tcp.ReciveMsg();
     }
 
     public void EndGame()
     {
         _tcp.Close();
         //ui reset
+
+        _boardManager.ResetMark();
+        foreach (GameObject stone in _boardManager._setStone)
+        {
+            Destroy(stone);
+        }
+
+        _boardManager._setStone.Clear();
+
+        _uiManager.SetWaiting(false);
+        _uiManager.SetConnecting(false);
+        _uiManager.SetLobby(true);
     }
 
     #region CamShake
