@@ -134,7 +134,10 @@ public class TCPBase : MonoBehaviour
         {
             AcceptClient();
             if (_socket != null)
+            {
                 _IsConnected = !((_socket.Poll(1000, SelectMode.SelectRead) && (_socket.Available == 0)) || !_socket.Connected);
+                Debug.Log(_IsConnected);
+            }
             else
             {
                 Disconnect();

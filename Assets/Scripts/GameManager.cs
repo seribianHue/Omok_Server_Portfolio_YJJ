@@ -29,6 +29,8 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         instance = this;
+        _isGameOver = true;
+        _isWaiting = true;
     }
 
     private void Start()
@@ -44,6 +46,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    bool _isWaiting;
     bool _isServerOn;
 
     public void OnBtnStartServer()
@@ -52,10 +55,12 @@ public class GameManager : MonoBehaviour
         if (_isServerOn)
         {
             _uiManager.SetWaiting(true);
+            _isWaiting = true;
             _isGameOver = false;
             _myMark = BoardManager.eMARK.Balck;
             _opponentMark = BoardManager.eMARK.White;
             _curTurnMark = BoardManager.eMARK.Balck;
+            //StartCoroutine(CRT_CheckConnection());
         }
     }
 
@@ -66,13 +71,30 @@ public class GameManager : MonoBehaviour
         if (_isConnected)
         {
             _uiManager.SetConnecting(true);
+            _isWaiting = true;
             _isGameOver = false;
 
             _myMark = BoardManager.eMARK.White;
             _opponentMark = BoardManager.eMARK.Balck;
             _curTurnMark = BoardManager.eMARK.Balck;
-
+            //StartCoroutine(CRT_CheckConnection());
         }
+    }
+
+    IEnumerator CRT_CheckConnection()
+    {
+        while (!_isGameOver)
+        {
+            if (!_tcp._IsConnected)
+            {
+                DisconnectTCP();
+                _uiManager.SetConnectionLostSet(true);
+                yield return null;
+            }
+            yield return null;
+        }
+
+        yield return null;
     }
 
     public void OnBtnCancelServer()
@@ -86,14 +108,29 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (_tcp._IsConnected && !_isGameOver)
+        if (_isWaiting)
+        {
+            if (_tcp._IsConnected)
+            {
+                _uiManager.SetLobby(false);
+                _isWaiting = false;
+            }
+                
+        }
+
+        if (_tcp._IsConnected && !_isWaiting)
         {
             _uiManager.SetLobby(false);
             UpdateTurn();
             UpdateWinner();
             _uiManager.SetSlider(_timeLimit, _curTime);
         }
+        if (!_tcp._IsConnected && !_isWaiting)
+        {
+            DisconnectTCP();
+            _uiManager.SetConnectionLostSet(true);
 
+        }
     }
 
     public enum eRESULT { NONE = -1, WIN, LOSE, TIE }
@@ -308,6 +345,7 @@ public class GameManager : MonoBehaviour
     public void EndGame()
     {
         //ui reset
+        _isGameOver = true;
 
         _eResult = eRESULT.NONE;
         _boardManager.ResetMark();
@@ -330,7 +368,10 @@ public class GameManager : MonoBehaviour
     }
 
 
-
+    private void OnApplicationQuit()
+    {
+        DisconnectTCP();    
+    }
 
 
     #region CamShake
