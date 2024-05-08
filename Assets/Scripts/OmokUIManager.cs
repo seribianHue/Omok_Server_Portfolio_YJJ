@@ -132,6 +132,7 @@ public class OmokUIManager : MonoBehaviour
     #region restart
 
     [Header("Restart")]
+    [SerializeField] GameObject _RSSet;
     [SerializeField] Button _RSBTN;
     [SerializeField] Button _NoRSBTN;
     [SerializeField] GameObject _RSwaitingText;
@@ -150,6 +151,30 @@ public class OmokUIManager : MonoBehaviour
     {
         _RSwaitingText.SetActive(onoff);
     }
+
+    public void SetRSInit()
+    {
+        SetRSBTNOnOff(true);
+        SetNoRSBTNOnOff(true);
+        SetRSwaitingText(false);
+    }
+
+    public void SetRSsetOnOff(bool onoff)
+    {
+        _RSSet.SetActive(onoff);
+    }
+
+    #endregion
+
+    #region ConncetionLost
+    [Header("Conncetion Lost")]
+    [SerializeField] GameObject _CLGobj;
+
+    public void SetConnectionLostSet(bool onoff)
+    {
+        _CLGobj.SetActive(onoff);   
+    }
+
 
     #endregion
 }

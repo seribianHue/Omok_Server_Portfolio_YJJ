@@ -55,6 +55,7 @@ public class GameManager : MonoBehaviour
             _isGameOver = false;
             _myMark = BoardManager.eMARK.Balck;
             _opponentMark = BoardManager.eMARK.White;
+            _curTurnMark = BoardManager.eMARK.Balck;
         }
     }
 
@@ -69,8 +70,18 @@ public class GameManager : MonoBehaviour
 
             _myMark = BoardManager.eMARK.White;
             _opponentMark = BoardManager.eMARK.Balck;
+            _curTurnMark = BoardManager.eMARK.Balck;
 
         }
+    }
+
+    public void OnBtnCancelServer()
+    {
+        _tcp.Close();
+        _isServerOn = false;
+        _uiManager.SetWaiting(false); 
+        _isGameOver = true;
+
     }
 
     private void Update()
@@ -126,10 +137,14 @@ public class GameManager : MonoBehaviour
             else
             {
                 //random mark
-                _boardManager.setRandomMark(_myMark);
+                _boardManager.setRandomMark(_myMark, out indexX, out indexY);
+
+                string indexXY = indexX.ToString() + "," + indexY.ToString();
+                _tcp.SendMsg(indexXY);
 
                 _curTime = 0;
-                X = -1; Y = -1;
+
+                X = indexX; Y = indexY;
                 return true;
             }
         }
@@ -204,20 +219,22 @@ public class GameManager : MonoBehaviour
         else if( _eResult == eRESULT.WIN)
         {
             _uiManager.SetWinText();
-            _uiManager.SetRSBTNOnOff(true);
-            _uiManager.SetNoRSBTNOnOff(true);
+            _uiManager.SetRSInit();
+            _uiManager.SetRSsetOnOff(true);
         }
         else
         {
             _uiManager.SetLoseText();
-            _uiManager.SetRSBTNOnOff(true);
-            _uiManager.SetNoRSBTNOnOff(true);
+            _uiManager.SetRSInit();
+            _uiManager.SetRSsetOnOff(true);
+
         }
     }
 
     public void BTN_RestartGame()
     {
         _uiManager.SetRSBTNOnOff(false);
+        _uiManager.SetNoRSBTNOnOff(false);
         _uiManager.SetRSwaitingText(true);
         StartCoroutine(CRT_Restart());
     }
@@ -233,7 +250,13 @@ public class GameManager : MonoBehaviour
         Debug.Log("Restart Thread Ended");
         if(_tcp._IsConnected == false)
         {
-            EndGame();
+            DisconnectTCP();
+            _uiManager.SetWinLoseTextOff();
+
+            _uiManager.SetRSInit();
+            _uiManager.SetRSsetOnOff(false);
+            _uiManager.SetConnectionLostSet(true);
+            //EndGame();
             yield return null;
         }
         yield return null;
@@ -257,12 +280,14 @@ public class GameManager : MonoBehaviour
 
     void RestartGame()
     {
+        //_tcp.ReciveMsg();
+
         _eResult = eRESULT.NONE;
         _isGameOver = false;
-        _uiManager.SetWinLoseTextOff(); 
-        _uiManager.SetNoRSBTNOnOff(false);
-        _uiManager.SetRSwaitingText(false);
-        //_curTurnMark = BoardManager.eMARK.Balck;
+        _uiManager.SetWinLoseTextOff();
+        _uiManager.SetRSInit();
+        _uiManager.SetRSsetOnOff(false);
+        _curTurnMark = BoardManager.eMARK.Balck;
 
         _boardManager.ResetMark();
         foreach (GameObject stone in _boardManager._setStone)
@@ -274,11 +299,17 @@ public class GameManager : MonoBehaviour
         _tcp.ReciveMsg();
     }
 
+    public void DisconnectTCP()
+    {
+        //_tcp.ReciveMsg();
+        _tcp.Close();
+    }
+
     public void EndGame()
     {
-        _tcp.Close();
         //ui reset
 
+        _eResult = eRESULT.NONE;
         _boardManager.ResetMark();
         foreach (GameObject stone in _boardManager._setStone)
         {
@@ -290,7 +321,17 @@ public class GameManager : MonoBehaviour
         _uiManager.SetWaiting(false);
         _uiManager.SetConnecting(false);
         _uiManager.SetLobby(true);
+
+        _uiManager.SetWinLoseTextOff();
+        _uiManager.SetRSInit();
+        _uiManager.SetRSsetOnOff(false);
+
+        _uiManager.SetConnectionLostSet(false);
     }
+
+
+
+
 
     #region CamShake
 

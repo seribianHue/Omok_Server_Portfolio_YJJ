@@ -145,18 +145,22 @@ public class BoardManager : MonoBehaviour
 
     }
 
-    public void setRandomMark(eMARK eMark)
+    public void setRandomMark(eMARK eMark, out int ranX, out int ranY)
     {
         bool isOK = false;
-        int ranX = -1;
-        int ranY = -1;
+        ranX = -1;
+        ranY = -1;
 
+        int how;
         while (isOK == false)
         {
             ranX = Random.Range(0, _cellCount);
             ranY = Random.Range(0, _cellCount);
             if (_cells[ranX, ranY]._state == eMARK.None)
-                isOK = true;
+            {
+                isOK = CheckOmokRule(ranX, ranY, eMark, out how);
+
+            }
         }
 
         SetMark(ranX, ranY, eMark);
