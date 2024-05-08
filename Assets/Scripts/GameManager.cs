@@ -103,7 +103,7 @@ public class GameManager : MonoBehaviour
         _isServerOn = false;
         _uiManager.SetWaiting(false); 
         _isGameOver = true;
-
+        _isWaiting = true;
     }
 
     private void Update()
@@ -115,10 +115,11 @@ public class GameManager : MonoBehaviour
                 _uiManager.SetLobby(false);
                 _isWaiting = false;
             }
-                
+            _uiManager.SetConnectionLostSet(false);
+
         }
 
-        if (_tcp._IsConnected && !_isWaiting)
+        if (_tcp._IsConnected && !_isWaiting && !_isGameOver)
         {
             _uiManager.SetLobby(false);
             UpdateTurn();
@@ -128,6 +129,9 @@ public class GameManager : MonoBehaviour
         if (!_tcp._IsConnected && !_isWaiting)
         {
             DisconnectTCP();
+            _uiManager.SetWinLoseTextOff();
+            _uiManager.SetRSInit();
+            _uiManager.SetRSsetOnOff(false);
             _uiManager.SetConnectionLostSet(true);
 
         }
@@ -202,16 +206,21 @@ public class GameManager : MonoBehaviour
         string recvXY = _tcp.ReciveMsg();
 
         if (recvXY == null) { X = -1; Y = -1; return false; }
-
         string[] XY = recvXY.Split(',');
-        int indexX = Int32.Parse(XY[0]);
-        int indexY = Int32.Parse(XY[1]);
 
+        if(Int32.TryParse(XY[0], out X))
+        {
+            int indexX = Int32.Parse(XY[0]);
+            int indexY = Int32.Parse(XY[1]);
+            _boardManager.SetMark(indexX, indexY, _opponentMark);
 
-        _boardManager.SetMark(indexX, indexY, _opponentMark);
+            X = indexX; Y = indexY;
+            return true;
+        }
 
-        X = indexX; Y = indexY;
-        return true;
+        X = -1; Y = -1;
+        return false;
+
     }
 
     public void UpdateTurn()
